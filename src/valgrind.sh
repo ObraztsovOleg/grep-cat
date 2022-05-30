@@ -1,0 +1,2 @@
+valgrind --trace-children=yes --track-fds=yes --track-origins=yes --leak-check=full --show-leak-kinds=all --log-file="./cat/cat_log.txt" ./cat/s21_cat -benst ./cat/test.txt
+valgrind --trace-children=yes --track-fds=yes --track-origins=yes --leak-check=full --show-leak-kinds=all --log-file="./grep/grep_log.txt" ./grep/s21_grep -i -v -c -n -l 21 ./cat/test.txt
