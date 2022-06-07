@@ -9,12 +9,12 @@ OBJ_COMMON := $(SRC_COMMON:.c=.o)
 
 OS := $(shell uname -s)
 
-CFLAGS := -c -Wall -Wextra -Wall -std=c11
+CFLAGS := -c -Wall -Wextra -Wall -std=c11 -g
 
 ifeq ($(OS), Linux)
     LFLAGS = -lpcre                    # <--- unix
 else
-    LFLAGS =                            # <--- macOs
+    LFLAGS = -lpcre                            # <--- macOs
 endif
 
 CC := gcc

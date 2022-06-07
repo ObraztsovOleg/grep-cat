@@ -1,7 +1,6 @@
 #define  _GNU_SOURCE
 #include <stdio.h>
 #include <pcre.h>
-#include <string.h>
 #include "./s21_grep.h"
 #include "../common/s21_common.h"
 #include <stdlib.h>
@@ -88,7 +87,6 @@ char * _parse_regex(void) {
         parsed_re[count++] = regex[i];
     }
 
-    // free(regex);
     return parsed_re;
 }
 
@@ -99,54 +97,6 @@ void _delete_list(struct string_node ** list) {
 
         free(head->str);
         free(head);
-    }
-}
-
-char * _pop_list(struct string_node ** list) {
-    char * result = NULL;
-
-    if (*list != NULL) {
-        struct string_node * head = *list;
-        result = head->str;
-
-        (*list) = (*list)->next;
-        free(head);
-    }
-
-    return result;
-}
-
-int _count_nodes(struct string_node ** list) {
-    struct string_node * current = *list;
-    struct string_node * next = NULL;
-    int num_of_nodes = 0;
-
-    while (current != NULL) {
-        next = current->next;
-        num_of_nodes++;
-        current = next;
-    }
-
-    return num_of_nodes;
-}
-
-void _insert_node(struct string_node ** list, int size, char * origin_str) {
-    struct string_node * new_node = (struct string_node *) malloc(sizeof(struct string_node));
-
-    new_node->str = (char *) malloc((size + 1) * sizeof(char));
-    strcpy(new_node->str, origin_str);
-
-    new_node->next = NULL;
-
-    if (*list == NULL) {
-         *list = new_node;
-    } else {
-        struct string_node * last_node = *list;
-
-        while (last_node->next != NULL) {
-            last_node = last_node->next;
-        }
-        last_node->next = new_node;
     }
 }
 
@@ -186,7 +136,7 @@ void _find_match(char * str, struct string_node ** list) {
         memset(new_str, 0, substring_length);
         strncpy(new_str, substring_start, substring_length);
 
-        _insert_node(list, strlen(new_str), new_str);
+        insert_node(list, strlen(new_str), new_str);
 
         offset = ovector[1];
         free(new_str);
@@ -200,16 +150,22 @@ void _find_match(char * str, struct string_node ** list) {
 void _return_lines_count(long int lines_count, \
                          int control, char * path) {
     if (control == PRINT_FILE) {
-        printf("%s:", path);
-        // printf("\033[0;35m%s\033[0m:", path);
+        #if HIGHLIGHTER
+            printf("\033[0;35m%s\033[0m:", path);
+        #else
+            printf("%s:", path);
+        #endif
     }
 
     printf("%ld\n", lines_count);
 }
 
 void _return_file_name(char * path) {
-    printf("%s\n", path);
-    // printf("\033[0;35m%s\033[0m\n", path);
+    #if HIGHLIGHTER
+        printf("\033[0;35m%s\033[0m\n", path);
+    #else
+        printf("%s\n", path);
+    #endif
 }
 
 void _return_text(char * string, struct string_node ** list, \
@@ -218,24 +174,33 @@ void _return_text(char * string, struct string_node ** list, \
     char * ret = NULL;
 
     if (control == PRINT_FILE) {
-        printf("%s:", path);
-        // printf("\033[0;35m%s\033[0m:", path);
+        #if HIGHLIGHTER
+            printf("\033[0;35m%s\033[0m:", path);
+        #else
+            printf("%s:", path);
+        #endif
     }
 
     if (flags & FLAGS_LINE_NUMBER) {
-        // printf("\033[0;32m%d\033[0m:", line_number);
-        printf("%d:", line_number);
+        #if HIGHLIGHTER
+            printf("\033[0;32m%d\033[0m:", line_number);
+        #else
+            printf("%d:", line_number);
+        #endif
     }
 
-    while ((match_str = _pop_list(list)) != NULL) {
+    while ((match_str = pop_list(list)) != NULL) {
         ret = strstr(string, match_str);
 
         for (int i = 0; i < (ret - string); i++) {
             printf("%c", string[i]);
         }
         for (int i = 0; i < (int) strlen(match_str); i++) {
-            printf("%c", match_str[i]);
-            // printf("\033[1m\033[31m%c\033[0m", match_str[i]);
+            #if HIGHLIGHTER
+                printf("\033[1m\033[31m%c\033[0m", match_str[i]);
+            #else
+                printf("%c", match_str[i]);
+            #endif
         }
 
         string = string + strlen(match_str) + (ret - string);
@@ -304,24 +269,6 @@ void _grep_stream(FILE * stream, int control, char * path) {
     free(stdin_str);
 }
 
-
-void _get_paths(const char * argv[], struct string_node ** path_names) {
-    char * path = NULL;
-
-    if (argv[optind] != NULL) {
-        while ((path = (char *) argv[optind++]) != NULL) {
-            int what = 0;
-            if ((what = what_is(path)) == FILE_EXISTS) {
-                _insert_node(path_names, (int) strlen(path), path);
-            } else {
-                char error_str[1000] = "\0";
-                sprintf(error_str, "grep: %s: %s", path, strerror(what));
-                _insert_node(path_names, (int) strlen(error_str), error_str);
-            }
-        }
-    }
-}
-
 void s21_grep(int argc, char * argv[]) {
     _set_flags(argc, argv);
     if (regex == NULL && !(flags & FLAGS_REGEXP))
@@ -330,15 +277,15 @@ void s21_grep(int argc, char * argv[]) {
     regex = _parse_regex();
 
     struct string_node * path_names = NULL;
-    _get_paths((const char **) argv, &path_names);
+    write_paths((const char **) argv, &path_names, "grep", &optind);
 
     if (path_names == NULL) {
         _grep_stream(stdin, DO_NOT_PRINTF_FILE, NULL);
     } else {
         char * path_name = NULL;
-        int num_nodes = _count_nodes(&path_names);
+        int num_nodes = count_nodes(&path_names);
 
-        while ((path_name = _pop_list(&path_names)) != NULL) {
+        while ((path_name = pop_list(&path_names)) != NULL) {
             if (what_is(path_name) == FILE_EXISTS) {
                 FILE * stream = open_file(path_name);
 

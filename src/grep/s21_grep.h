@@ -14,16 +14,7 @@
 #define REGEX_BASIC_CH  '?', '+', '{', '|', '(', ')', '}'
 #define REGEX_BASIC_CH_LEN 7
 
-struct string_node {
-    char * str;
-    struct string_node * next;
-};
-
-enum control {
-    PRINT_FILE         = 0,
-    DO_NOT_PRINTF_FILE = 1
-};
-
+#define HIGHLIGHTER 0
 
 struct option long_options[] = {
     { "regexp", required_argument, NULL, 'e' },

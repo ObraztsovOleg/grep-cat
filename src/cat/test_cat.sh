@@ -5,13 +5,13 @@ FAIL=0
 FILE_NAME="test.txt"
 DIFF_OUTPUT=""
 
-for flag_1 in '' -b -e -n -s -t
+for flag_1 in '' -b -e -n -s -t  #--number-nonblank --number --squeeze-blank
 do
-    for flag_2 in '' -b -e -n -s -t
+    for flag_2 in '' -b -e -n -s -t # --number-nonblank --number --squeeze-blank
     do
-        for flag_3 in '' -b -e -n -s -t
+        for flag_3 in '' -b -e -n -s -t # --number-nonblank --number --squeeze-blank
         do
-            for flag_4 in '' -b -e -n -s -t
+            for flag_4 in '' -b -e -n -s -t # --number-nonblank --number --squeeze-blank
             do
                 if [[ $flag_1 != $flag_2 ]] && [[ $flag_1 != $flag_3 ]] && 
                   [[ $flag_1 != $flag_4 ]] && [[ $flag_2 != $flag_3 ]] && 

@@ -14,7 +14,7 @@ CFLAGS := -c -Wall -Wextra -Wall -std=c11
 ifeq ($(OS), Linux)
     LFLAGS = -lpcre  # <--- unix
 else
-    LFLAGS =                            # <--- macOs
+    LFLAGS = -lpcre        # <--- macOs
 endif
 
 CC := gcc
